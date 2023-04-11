@@ -36,7 +36,7 @@ export function match<T, U = never>(value: any, patterns: MatchPatterns<T, U>): 
     } else if (isNone(value) && patterns.None !== undefined) {
         return patterns.None as T;
     }
-    
+
     for (const p in patterns) {
 
         if (p === "Some" || p === "None") continue;
@@ -44,8 +44,14 @@ export function match<T, U = never>(value: any, patterns: MatchPatterns<T, U>): 
         const patternKey = String(p);
         const isRange = patternKey.includes("..=");
         const isOr = patternKey.includes("|");
-        const isRegex = patternKey.startsWith("/") && patternKey.endsWith("/");
-        
+
+        const lastSlashIndex = patternKey.lastIndexOf("/");
+        const foundFlags = patternKey.slice(lastSlashIndex + 1).split("");
+
+        const isRegex = !!foundFlags.length
+            ? patternKey.startsWith("/") && [ 'g', 'i', 'm', 'u', 's', 'y' ].some((flag) => foundFlags.includes(flag))
+            : patternKey.startsWith("/") && patternKey.endsWith("/");
+
         if (isRange) {
             const [start, end] = patternKey.split("..=").map(s => isNaN(Number(s)) ? s : Number(s));
 
@@ -55,12 +61,12 @@ export function match<T, U = never>(value: any, patterns: MatchPatterns<T, U>): 
             }
         } else if (isOr) {
             const patternValues = patternKey.split("|").map(s => isNaN(Number(s)) ? s : Number(s));
-            
+
             if (patternValues.includes(value)) {
                 return patterns[p]();
             }
         } else if (isRegex) {
-            const regex = new RegExp(patternKey.slice(1, -1));
+            const regex = new RegExp(patternKey.slice(1, lastSlashIndex), foundFlags.join(""));
 
             if (regex.test(value)) {
                 return patterns[p]();

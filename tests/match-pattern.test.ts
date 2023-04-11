@@ -13,6 +13,7 @@ describe('testing match pattern function', () => {
     "1..=13": () => "Between 1 and 13",
     "25 | 50 | 100": () => "A bill",
     "/[a-z]/": () => "A lowercase letter",
+    "/boost/i": () => "case ignored",
     "_": () => "default",
   };
 
@@ -34,6 +35,7 @@ describe('testing match pattern function', () => {
     expect(match(10, matchValidates)).toBe("Between 1 and 13");
     expect(match(25, matchValidates)).toBe("A bill");
     expect(match("z", matchValidates)).toBe("A lowercase letter");
+    expect(match("BOOST", matchValidates)).toBe("case ignored");
     expect(match("1", matchValidates)).toBe("default");
   });
 
